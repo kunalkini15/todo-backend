@@ -8,13 +8,16 @@ from django.contrib.auth.decorators import login_required
 from django.core.files.storage import default_storage
 from django.core import serializers
 
-from .models import List, Label, Task, Status
+from .models import List, Label, Task, Status, Subscription
 
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework import status
 from rest_framework.authentication import SessionAuthentication, BasicAuthentication
 from rest_framework.permissions import IsAuthenticated
+
+from todolist.settings import EMAIL_HOST_USER
+from django.core.mail import send_mail
 
 class Register(APIView):
     def post(self, request):
@@ -38,7 +41,21 @@ class Login(APIView):
         try:
             user = authenticate(username=email, password=password)
             if user is not None:
-                return Response("User Logged in successfully", status=status.HTTP_200_OK)
+                try:
+                    sub = Subscription.objects.get(user=user)
+                    data={
+                        "message": "User Logged in successfully",
+                        "subscribed": True
+                    }
+                    print(data)
+                    return Response(data, status=status.HTTP_200_OK)
+                except:
+                    data={
+                        "message": "User Logged in successfully",
+                        "subscribed": False
+                    }
+                    print(data)
+                    return Response(data, status=status.HTTP_200_OK)
             else:
                 return Response("Wrong password", status=status.HTTP_401_UNAUTHORIZED)
         except:
@@ -180,32 +197,6 @@ class TaskView(APIView):
         return Response("Task created successfully", status=status.HTTP_201_CREATED)
 
     def put(self, request):
-        # task_id = request.data["id"]
-        # name = request.data["name"]
-        # description = request.data["description"]
-        # label = request.data["label"]
-        # task_status = request.data["status"]
-        # task_date = request.data["date"]
-        # task_time = request.data["time"]
-        # is_completed = request.data["isCompleted"]
-        # split_date = list(map(int, task_date.split("-")))
-        # split_time = list(map(int, task_time.split(":")))
-        # due_date = (datetime.datetime(split_date[0], split_date[1], split_date[2], split_time[0], split_time[1], split_time[2]))
-        # label_obj = Label.objects.get(name=label)
-        # status_obj = Status.objects.get(status=task_status)
-        #
-        # task_obj = Task.objects.get(pk=task_id)
-        #
-        # task_obj.name = name
-        # task_obj.description = description
-        # task_obj.label = label_obj
-        # task_obj.status = status_obj
-        # task_obj.due_date = due_date
-        #
-        # task_obj.save()
-        #
-        # return JsonResponse("Task Updated successfully", safe=False)
-
         task_id = request.data["id"]
         task_obj = Task.objects.get(pk=task_id)
         if "name" in request.data:
@@ -240,3 +231,42 @@ class TaskView(APIView):
         t.delete()
 
         return JsonResponse("Deleted successfully", safe=False)
+
+def test_email(request):
+    subject="TEST Email"
+    message="Testing automatic email sending, Please ignore this."
+    send_mail(subject, message,  EMAIL_HOST_USER,
+        ["kunalkini15@gmail.com", "kruthikakt1998@gmail.com", "karankini25@gmail.com", "kavyasrinivas987@gmail.com", "nischalnp01@gmail.com"],
+         fail_silently=False)
+    return JsonResponse("Email Sent successfully", safe=False)
+
+class SubscriptionView(APIView):
+    def get(self, request):
+        users = Subscription.objects.all()
+        response = []
+        for user in users:
+            response.append({
+                "name": user.user.name,
+                "email": user.user.email
+            })
+
+        return JsonResponse(response, safe=False)
+
+    def post(self, request):
+        email = request.data["email"]
+        subscribe = request.data["subscribe"]
+        print(email, subscribe)
+        if subscribe:
+            try:
+                user = Subscription.objects.get(user=User.objects.get(email=email))
+                return JsonResponse("User is already subscribed", safe=False)
+            except:
+                user = Subscription.objects.create(user=User.objects.get(email=email))
+                return JsonResponse("User subscribed suceessfully", safe=False)
+        else:
+            try:
+                user = Subscription.objects.get(user=User.objects.get(email=email))
+                user.delete()
+                return JsonResponse("User unsubscribed successfully", safe=False)
+            except:
+                return JsonResponse("User unsubscribed successfully", safe=False)
