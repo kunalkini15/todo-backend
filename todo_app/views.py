@@ -271,10 +271,10 @@ class SubscriptionView(APIView):
             except:
                 return JsonResponse("User unsubscribed successfully", safe=False)
 
-@background(schedule=datetime.datetime(2020, 5, 29, 22, 45))
+@background(schedule=datetime.datetime(2020, 5, 29, 22, 50))
 def test_email():
     subject="TEST Email"
-    message="Testing automatic email sending, Please ignore this."
+    message="Testing automatic email sending, Please ignore this." + str(datetime.datetime.now())
     send_mail(subject, message,  EMAIL_HOST_USER,
         # ["kunalkini15@gmail.com", "kruthikakt1998@gmail.com", "karankini25@gmail.com", "kavyasrinivas987@gmail.com", "nischalnp01@gmail.com"],
         ["kunalkini15@gmail.com"],
@@ -301,5 +301,5 @@ def test_email():
 
 def background_test(request):
 
-    test_email(repeat=30, repeat_until=datetime.datetime(2020, 5, 29, 22, 46))
+    test_email(repeat=60, repeat_until=datetime.datetime(2020, 5, 29, 22, 52))
     return JsonResponse("Done", safe=False)
