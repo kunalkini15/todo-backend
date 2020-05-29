@@ -271,35 +271,25 @@ class SubscriptionView(APIView):
             except:
                 return JsonResponse("User unsubscribed successfully", safe=False)
 
-@background(schedule=datetime.datetime(2020, 5, 29, 22, 50))
+@background(schedule=datetime.datetime(2020, 5, 30, 8, 0))
 def test_email():
-    subject="TEST Email"
-    message="Testing automatic email sending, Please ignore this." + str(datetime.datetime.now())
-    send_mail(subject, message,  EMAIL_HOST_USER,
-        # ["kunalkini15@gmail.com", "kruthikakt1998@gmail.com", "karankini25@gmail.com", "kavyasrinivas987@gmail.com", "nischalnp01@gmail.com"],
-        ["kunalkini15@gmail.com"],
-         fail_silently=False)
-    return JsonResponse("Email Sent successfully", safe=False)
-    # subscribed_users = Subscription.objects.all()
-    # response = []
-    # for subscribed_user in subscribed_users:
-    #     lists = get_lists(subscribed_user)
-    #     task_due = []
-    #     for list_obj in lists:
-    #         tasks = get_active_tasks(list_obj)
-    #         for task in tasks:
-    #             task_due.append({
-    #                 "task_name": task.name,
-    #                 "task_due_on": task.due_date
-    #             })
-    #
-    #     send_reminder_email(subscribed_user.user, task_due)
-    #
-    #
-    # return JsonResponse("Done", safe=False)
+    subscribed_users = Subscription.objects.all()
+    response = []
+    for subscribed_user in subscribed_users:
+        lists = get_lists(subscribed_user)
+        task_due = []
+        for list_obj in lists:
+            tasks = get_active_tasks(list_obj)
+            for task in tasks:
+                task_due.append({
+                    "task_name": task.name,
+                    "task_due_on": task.due_date
+                })
+
+        send_reminder_email(subscribed_user.user, task_due)
+    return JsonResponse("Done", safe=False)
 
 
 def background_test(request):
-
-    test_email(repeat=60, repeat_until=datetime.datetime(2020, 5, 29, 22, 52))
+    test_email(repeat=43200, repeat_until=datetime.datetime(2020, 7, 31, 8, 0))
     return JsonResponse("Done", safe=False)
