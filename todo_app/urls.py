@@ -8,5 +8,6 @@ urlpatterns = [
     path('tasks/', views.TaskView.as_view(), name="tasks"),
     path('tasks/<int:task_id>/', views.TaskView.as_view(), name="single_task"),
     path('test_email/', views.test_email, name="test_email"),
-    path("subscribe/", views.SubscriptionView.as_view(), name="subscribe")
+    path("subscribe/", views.SubscriptionView.as_view(), name="subscribe"),
+    path('test_background/', views.background_test, name="background_test")
 ]

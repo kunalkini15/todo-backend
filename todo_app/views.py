@@ -9,6 +9,7 @@ from django.core.files.storage import default_storage
 from django.core import serializers
 
 from .models import List, Label, Task, Status, Subscription
+from .utilities import get_lists, get_active_tasks, send_reminder_email
 
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -18,6 +19,9 @@ from rest_framework.permissions import IsAuthenticated
 
 from todolist.settings import EMAIL_HOST_USER
 from django.core.mail import send_mail
+
+from background_task import background
+
 
 class Register(APIView):
     def post(self, request):
@@ -71,7 +75,6 @@ class ListView(APIView):
             response.append({
                 "id": list_object.id,
                 "name":list_object.name,
-                "count": list_object.tasks.all().count()
             })
         return JsonResponse(response, safe=False)
 
@@ -147,6 +150,7 @@ class TaskView(APIView):
 
             response = []
             for task in tasks:
+                print(task.due_date.date() == datetime.date.today())
                 current_task_object = {
                 "id": task.id,
                 "name": task.name,
@@ -183,8 +187,9 @@ class TaskView(APIView):
         task_time = request.data["time"]
         split_date = list(map(int, task_date.split("-")))
         split_time = list(map(int, task_time.split(":")))
-        due_date = (datetime.datetime(split_date[0], split_date[1], split_date[2], split_time[0], split_time[1], split_time[2]))
+        due_date = (datetime.datetime(split_date[0], split_date[1], split_date[2], split_time[0], split_time[1]))
         list_obj = List.objects.get(id=list_id)
+
 
         label_obj = Label.objects.get(name=label)
 
@@ -193,6 +198,7 @@ class TaskView(APIView):
         task_obj = Task.objects.create(name=name, description=description, due_date=due_date,
                                         list_obj=list_obj, label=label_obj, status=status_obj
                                         )
+
 
         return Response("Task created successfully", status=status.HTTP_201_CREATED)
 
@@ -215,7 +221,7 @@ class TaskView(APIView):
             task_time = request.data["time"]
             split_date = list(map(int, task_date.split("-")))
             split_time = list(map(int, task_time.split(":")))
-            due_date = (datetime.datetime(split_date[0], split_date[1], split_date[2], split_time[0], split_time[1], split_time[2]))
+            due_date = (datetime.datetime(split_date[0], split_date[1], split_date[2], split_time[0], split_time[1]))
             task_obj.due_date = due_date
         if "isCompleted" in request.data:
             task_obj.isCompleted = request.data["isCompleted"]
@@ -232,13 +238,7 @@ class TaskView(APIView):
 
         return JsonResponse("Deleted successfully", safe=False)
 
-def test_email(request):
-    subject="TEST Email"
-    message="Testing automatic email sending, Please ignore this."
-    send_mail(subject, message,  EMAIL_HOST_USER,
-        ["kunalkini15@gmail.com", "kruthikakt1998@gmail.com", "karankini25@gmail.com", "kavyasrinivas987@gmail.com", "nischalnp01@gmail.com"],
-         fail_silently=False)
-    return JsonResponse("Email Sent successfully", safe=False)
+
 
 class SubscriptionView(APIView):
     def get(self, request):
@@ -270,3 +270,35 @@ class SubscriptionView(APIView):
                 return JsonResponse("User unsubscribed successfully", safe=False)
             except:
                 return JsonResponse("User unsubscribed successfully", safe=False)
+
+@background(schedule=datetime.datetime(2020, 5, 28, 16, 27))
+def test_email():
+    # subject="TEST Email"
+    # message="Testing automatic email sending, Please ignore this."
+    # send_mail(subject, message,  EMAIL_HOST_USER,
+    #     ["kunalkini15@gmail.com", "kruthikakt1998@gmail.com", "karankini25@gmail.com", "kavyasrinivas987@gmail.com", "nischalnp01@gmail.com"],
+    #      fail_silently=False)
+    # return JsonResponse("Email Sent successfully", safe=False)
+    subscribed_users = Subscription.objects.all()
+    response = []
+    for subscribed_user in subscribed_users:
+        lists = get_lists(subscribed_user)
+        task_due = []
+        for list_obj in lists:
+            tasks = get_active_tasks(list_obj)
+            for task in tasks:
+                task_due.append({
+                    "task_name": task.name,
+                    "task_due_on": task.due_date
+                })
+
+        send_reminder_email(subscribed_user.user, task_due)
+
+
+    return JsonResponse("Done", safe=False)
+
+
+def background_test(request):
+
+    test_email(repeat=300)
+    return JsonResponse("Done", safe=False)

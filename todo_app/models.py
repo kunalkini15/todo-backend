@@ -16,7 +16,7 @@ class Task(models.Model):
 
     name = models.CharField(max_length = 30)
     description = models.TextField()
-    start_date = models.DateTimeField(default=timezone.now())
+    start_date = models.DateTimeField(default=timezone.now)
     due_date = models.DateTimeField()
     list_obj = models.ForeignKey('List', on_delete=models.CASCADE, null = True)
     label = models.ForeignKey('Label', null=True, blank=True, on_delete=models.CASCADE)
@@ -29,10 +29,8 @@ class List(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE, null=True)
     name = models.CharField(max_length=30)
     description = models.TextField()
-    tasks = models.ManyToManyField('Task')
-
     def __str__(self):
-        return self.name
+        return self.name + "-" + self.user.first_name
 
 class Subscription(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
