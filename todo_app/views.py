@@ -50,13 +50,15 @@ class Login(APIView):
                     sub = Subscription.objects.get(user=user)
                     data={
                         "message": "User Logged in successfully",
-                        "subscribed": True
+                        "subscribed": True,
+                        "name": user.first_name
                     }
                     return Response(data, status=status.HTTP_200_OK)
                 except:
                     data={
                         "message": "User Logged in successfully",
-                        "subscribed": False
+                        "subscribed": False,
+                        "name": user.first_name
                     }
                     return Response(data, status=status.HTTP_200_OK)
             else:
@@ -310,3 +312,10 @@ def test_email():
 def background_test(request):
     test_email(repeat=43200, repeat_until=datetime.datetime(2020, 7, 31, 8, 0))
     return JsonResponse("Done", safe=False)
+
+class UserView(APIView):
+    def delete(self, request):
+        email = request.data["email"]
+        user = User.objects.get(email=email)
+        user.delete()
+        return JsonResponse("User deleted successfully", safe=False)
