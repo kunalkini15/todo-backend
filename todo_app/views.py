@@ -9,7 +9,7 @@ from django.core.files.storage import default_storage
 from django.core import serializers
 
 from .models import List, Label, Task, Status, Subscription
-from .utilities import get_lists, get_active_tasks, send_reminder_email
+from .utilities import get_lists, get_active_tasks, send_reminder_email, get_report, send_report_email
 
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -319,3 +319,22 @@ class UserView(APIView):
         user = User.objects.get(email=email)
         user.delete()
         return JsonResponse("User deleted successfully", safe=False)
+
+class PerformanceView(APIView):
+    def get(self, request):
+        user = User.objects.get(email =  request.GET["email"])
+        total_tasks, completed_tasks, late_tasks, active_tasks = get_report(user)
+        response = {
+            "total_tasks": total_tasks,
+            "completed_tasks": completed_tasks,
+            "late_tasks": late_tasks,
+            "active_tasks": active_tasks
+        }
+
+        return JsonResponse(response)
+
+def email_report(request):
+    user = User.objects.get(email =  request.GET["email"])
+    send_report_email(user)
+
+    return JsonResponse("Email sent successfully", safe=False)
