@@ -103,6 +103,15 @@ class ListView(APIView):
 
             return Response("Something went wrong", status=status.HTTP_409_CONFLICT)
 
+    def delete(self, request):
+        try:
+            id = request.data["id"]
+            list_obj = List.objects.get(pk=id)
+            list_obj.delete()
+            return JsonResponse("List deleted successfully", safe=False)
+        except:
+            return Response("Error while deleting the list", status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
 class TaskView(APIView):
 
     def get(self, request, task_id=0):
@@ -149,11 +158,17 @@ class TaskView(APIView):
                     tasks = tasks.filter(isCompleted=filter)
 
                 if label_filter:
-                    label_obj = Label.objects.get(name=label)
+                    try:
+                        label_obj = Label.objects.get(name=label)
+                    except:
+                        label_obj = Label.objects.create(name=label)
                     tasks = tasks.filter(label=label_obj)
 
                 if status_filter:
-                    status_obj = Status.objects.get(status=task_status)
+                    try:
+                        status_obj = Status.objects.get(status=task_status)
+                    except:
+                        status_obj = Status.objects.create(status=task_status)
                     tasks = tasks.filter(status=status_obj)
 
                 # add priority filter here
@@ -218,9 +233,15 @@ class TaskView(APIView):
             list_obj = List.objects.get(id=list_id)
 
 
-            label_obj = Label.objects.get(name=label)
+            try:
+                label_obj = Label.objects.get(name=label)
+            except:
+                label_obj = Label.objects.create(name=label)
 
-            status_obj = Status.objects.get(status=task_status)
+            try:
+                status_obj = Status.objects.get(status=task_status)
+            except:
+                status_obj = Status.objects.create(status=task_status)
 
             task_obj = Task.objects.create(name=name, description=description, due_date=due_date,
                                             list_obj=list_obj, label=label_obj, status=status_obj
@@ -243,10 +264,18 @@ class TaskView(APIView):
                 task_obj.description = request.data["description"]
 
             if "label" in request.data:
-                task_obj.label = Label.objects.get(name=request.data["label"])
+                try:
+                    label_obj = Label.objects.get(name=label)
+                except:
+                    label_obj = Label.objects.create(name=label)
+                task_obj.label =label_obj
 
             if "status" in request.data:
-                task_obj.status = Status.objects.get(status=request.data["status"])
+                try:
+                    status_obj = Status.objects.get(status=task_status)
+                except:
+                    status_obj = Status.objects.create(status=task_status)
+                task_obj.status = status_obj
 
             if "date" in request.data and "time" in request.data:
                 task_date = request.data["date"]
