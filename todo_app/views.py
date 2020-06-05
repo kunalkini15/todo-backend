@@ -1,4 +1,6 @@
 import datetime
+from datetime import timedelta
+
 
 from django.shortcuts import render
 from django.http import JsonResponse
@@ -69,6 +71,7 @@ class Login(APIView):
 class ListView(APIView):
     def get(self, request):
         try:
+
             email = request.GET["email"]
             user = User.objects.get(email=email)
             list_objects = List.objects.filter(user=user)
@@ -85,6 +88,7 @@ class ListView(APIView):
 
 
     def post(self, request):
+
         try:
             name = request.data["name"]
             description = request.data["description"]
@@ -94,14 +98,15 @@ class ListView(APIView):
 
 
             list_obj = List.objects.create(user=user, name=name, description=description)
-
             return Response("List created successfully", status=status.HTTP_201_CREATED)
         except:
+
             return Response("Something went wrong", status=status.HTTP_409_CONFLICT)
 
 class TaskView(APIView):
 
     def get(self, request, task_id=0):
+
         try:
             if task_id == 0:
                 list_id = request.GET["id"]
@@ -134,6 +139,8 @@ class TaskView(APIView):
                 except:
                     priority_filter=False
 
+
+
                 if progress_filter: # applying progress filters
                     if progress == "Completed":
                         filter=True
@@ -150,6 +157,17 @@ class TaskView(APIView):
                     tasks = tasks.filter(status=status_obj)
 
                 # add priority filter here
+                if priority_filter:
+                    if priority == "Today":
+                        priority_date = datetime.date.today()
+                        tasks = tasks.filter(due_date__date = priority_date)
+
+                    elif priority == "Week":
+                        start = datetime.date.today()
+                        end = datetime.date.today() + timedelta(7)
+
+                        tasks = tasks.filter(due_date__date__gte = start, due_date__date__lte=end)
+
 
 
                 response = []
