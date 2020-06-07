@@ -263,6 +263,7 @@ class TaskView(APIView):
                 task_obj.description = request.data["description"]
 
             if "label" in request.data:
+                label = request.data["label"]
                 try:
                     label_obj = Label.objects.get(name=label)
                 except:
@@ -270,6 +271,7 @@ class TaskView(APIView):
                 task_obj.label =label_obj
 
             if "status" in request.data:
+                task_status = request.data["status"]
                 try:
                     status_obj = Status.objects.get(status=task_status)
                 except:
