@@ -8,9 +8,8 @@ urlpatterns = [
     path('lists/', views.ListView.as_view(), name="lists"),
     path('tasks/', views.TaskView.as_view(), name="tasks"),
     path('tasks/<int:task_id>/', views.TaskView.as_view(), name="single_task"),
-    path('test_email/', views.test_email, name="test_email"),
     path('subscribe/', views.SubscriptionView.as_view(), name="subscribe"),
-    path('test_background/', views.background_test, name="background_test"),
-    path('test_report/', views.PerformanceView.as_view(), name="test_report"),
-    path("report_email/", views.email_report, name="report_email")
+    path('get_progress_report/', views.PerformanceView.as_view(), name="get_progress_report"),
+    path('start_email_service/', views.call_background_email_service, name="start_email_service"),
+    path("send_report_via_email/", views.send_report_via_email, name="report_email")
 ]

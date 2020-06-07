@@ -232,7 +232,6 @@ class TaskView(APIView):
             due_date = (datetime.datetime(split_date[0], split_date[1], split_date[2], split_time[0], split_time[1]))
             list_obj = List.objects.get(id=list_id)
 
-
             try:
                 label_obj = Label.objects.get(name=label)
             except:
@@ -324,6 +323,7 @@ class SubscriptionView(APIView):
         subscribe = request.data["subscribe"]
         if subscribe:
             try:
+                send_email(repeat=43200, repeat_until=datetime.datetime(2020, 7, 31, 8, 0))
                 user = Subscription.objects.get(user=User.objects.get(email=email))
                 return JsonResponse("User is already subscribed", safe=False)
             except:
@@ -337,8 +337,10 @@ class SubscriptionView(APIView):
             except:
                 return JsonResponse("User unsubscribed successfully", safe=False)
 
-@background(schedule=datetime.datetime(2020, 5, 30, 8, 0))
-def test_email():
+
+
+@background(schedule=datetime.datetime(2020, 6, 7, 20, 0))
+def send_email():
     subscribed_users = Subscription.objects.all()
     response = []
     for subscribed_user in subscribed_users:
@@ -356,8 +358,8 @@ def test_email():
     return JsonResponse("Done", safe=False)
 
 
-def background_test(request):
-    test_email(repeat=43200, repeat_until=datetime.datetime(2020, 7, 31, 8, 0))
+def call_background_email_service(request):
+    send_email(repeat=43200, repeat_until=datetime.datetime(2020, 7, 31, 8, 0))
     return JsonResponse("Done", safe=False)
 
 class UserView(APIView):
@@ -380,7 +382,7 @@ class PerformanceView(APIView):
 
         return JsonResponse(response)
 
-def email_report(request):
+def send_report_via_email(request):
     user = User.objects.get(email =  request.GET["email"])
     send_report_email(user)
 

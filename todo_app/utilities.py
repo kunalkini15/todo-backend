@@ -40,7 +40,7 @@ def send_report_email(user):
     total_tasks, completed_tasks, late_tasks, active_tasks = get_report(user)
 
     subject = "To-do Progress report"
-    message = ("Hi " + user.first_name + ",\n" "We here at todo tracker want you to be as productive as possible. "
+    message = ("Hi " + user.first_name + ",\n"
                     "Here is your progress report so far.\n")
     message += ("\nTotal tasks you have created till date: %s\nNumber of completed tasks: %s\n"
                     "Number of incomplete tasks: %s\nNumber of overdue tasks: %s\n"%(total_tasks, completed_tasks, active_tasks, late_tasks))
