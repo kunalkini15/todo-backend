@@ -305,6 +305,21 @@ class TaskView(APIView):
             return Response("Something went wrong!", status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
+def get_single_task(request):
+    task_id = request.GET["id"]
+    task = Task.objects.get(pk=task_id)
+    current_task_object = {
+        "id": task.id,
+        "name": task.name,
+        "description": task.description,
+        "start_date": task.start_date,
+        "due_date": task.due_date,
+        "label": task.label.name,
+        "status": task.status.status,
+        "isCompleted": task.isCompleted
+    }
+    return JsonResponse(current_task_object)
+
 
 class SubscriptionView(APIView):
     def get(self, request):
